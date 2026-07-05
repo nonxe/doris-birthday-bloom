@@ -327,8 +327,8 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       } 
       else if (currentState === "blooming") {
         // Bloom flowers progressively: do NOT clear canvas!
-        // Spawn 5 new blooms per frame for faster density fill
-        const newBlooms = bloomsCache.current.splice(0, 5);
+        // Spawn 50 new blooms per frame for a dramatic blossom burst effect
+        const newBlooms = bloomsCache.current.splice(0, 50);
         newBlooms.forEach((nb) => activeBlooms.current.push(nb));
 
         // Grow active blooms
