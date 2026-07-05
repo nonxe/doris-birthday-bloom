@@ -251,6 +251,7 @@ function Finale({ onReplay }: { onReplay: () => void }) {
       className="absolute inset-0 flex items-center justify-center px-6 overflow-y-auto"
     >
       <FloatingOrbs />
+      <SakuraRain />
       <motion.div
         initial={{ y: 30, opacity: 0, scale: 0.96 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
