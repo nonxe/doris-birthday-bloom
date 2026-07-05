@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface Point {
   x: number;
@@ -32,22 +31,22 @@ function bezier(p1: Point, p2: Point, p3: Point, t: number): Point {
   };
 }
 
-// Branch data structure matching original project
+// Exact branch data from CODEING-BROS/happybday
 const branchData = [
-  535, 680, 570, 250, 500, 200, 30, 80, [
-    [540, 500, 455, 417, 340, 400, 13, 80, [
+  535, 680, 570, 250, 500, 200, 30, 100, [
+    [540, 500, 455, 417, 340, 400, 13, 100, [
       [450, 435, 434, 430, 394, 395, 2, 40]
     ]],
-    [550, 445, 600, 356, 680, 345, 12, 80, [
-      [578, 400, 648, 409, 661, 426, 3, 60]
+    [550, 445, 600, 356, 680, 345, 12, 100, [
+      [578, 400, 648, 409, 661, 426, 3, 80]
     ]],
     [539, 281, 537, 248, 534, 217, 3, 40],
     [546, 397, 413, 247, 328, 244, 9, 80, [
       [427, 286, 383, 253, 371, 205, 2, 40],
-      [498, 345, 435, 315, 395, 330, 4, 50]
+      [498, 345, 435, 315, 395, 330, 4, 60]
     ]],
-    [546, 357, 608, 252, 678, 221, 6, 80, [
-      [590, 293, 646, 277, 648, 271, 2, 60]
+    [546, 357, 608, 252, 678, 221, 6, 100, [
+      [590, 293, 646, 277, 648, 271, 2, 80]
     ]]
   ]
 ];
@@ -56,12 +55,10 @@ interface Branch {
   p1: Point;
   p2: Point;
   p3: Point;
-  startRadius: number;
-  currentRadius: number;
+  radius: number;
   length: number;
   len: number;
   childBranches: any[];
-  points: Point[]; // Captured points for rendering later
 }
 
 interface Bloom {
@@ -88,21 +85,22 @@ interface FallingHeart {
 
 export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [state, setState] = useState<"seed" | "seed-falling" | "growing" | "blooming" | "done">("seed");
+  const [state, setState] = useState<"seed" | "seed-shrinking" | "seed-falling" | "growing" | "blooming" | "done">("seed");
   const stateRef = useRef(state);
   
   // Seed position and properties
   const seedPos = useRef({ x: 550, y: 300 });
-  const seedScale = useRef(1.8);
+  const seedScale = useRef(2.0); // Size matching scale=2 from original
   const seedAlpha = useRef(1.0);
-  const pulseScale = useRef(1.0);
+  const pulseScale = useRef(2.0);
+  const footerLength = useRef(0);
 
-  // Lists of elements
+  // Animation entities
   const activeBranches = useRef<Branch[]>([]);
-  const completedBranches = useRef<Branch[]>([]);
-  const blooms = useRef<Bloom[]>([]);
-  const activeBloomsCount = useRef(0);
+  const bloomsCache = useRef<Bloom[]>([]);
+  const activeBlooms = useRef<Bloom[]>([]);
   const fallingHearts = useRef<FallingHeart[]>([]);
+  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     stateRef.current = state;
@@ -112,7 +110,6 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (state !== "seed") return;
 
-    // Check if click is near the seed
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     
@@ -124,8 +121,9 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
     const dy = y - seedPos.current.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < 40) {
-      setState("seed-falling");
+    // Click threshold matches original seed size
+    if (dist < 50) {
+      setState("seed-shrinking");
     }
   };
 
@@ -135,7 +133,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // 1. Initialize blooms in a heart boundary
+    // Generate blooms matching original distribution
     const generatedBlooms: Bloom[] = [];
     const colors = [
       "rgba(255, 143, 171, 0.8)",  // Pastel pink
@@ -146,11 +144,11 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       "rgba(255, 221, 226, 0.75)", // Cream pink
     ];
 
-    while (generatedBlooms.length < 320) {
+    while (generatedBlooms.length < 350) {
       const x = Math.random() * (1100 - 60) + 30;
-      const y = Math.random() * (450 - 30) + 30; // Bloomed area focuses top
-      const cx = x - 540; // Tree trunk is centered near 540
-      const cy = 340 - y; // Center of heart canopy is near y=340
+      const y = Math.random() * (450 - 30) + 30; // Canopy area
+      const cx = x - 540; // Centered near main trunk
+      const cy = 340 - y; // Heart canopy center
       
       if (inHeart(cx, cy, 190)) {
         generatedBlooms.push({
@@ -158,13 +156,13 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
           color: colors[Math.floor(Math.random() * colors.length)],
           maxScale: 0.12 + Math.random() * 0.18,
           scale: 0.01,
-          speed: 0.006 + Math.random() * 0.008,
+          speed: 0.08 + Math.random() * 0.05, // original uses scale+=0.1 per step, here we make it smooth
           alpha: 0.65 + Math.random() * 0.35,
           angle: Math.random() * Math.PI * 2,
         });
       }
     }
-    blooms.current = generatedBlooms;
+    bloomsCache.current = generatedBlooms;
 
     // Helper to draw a heart
     const drawHeartShape = (c: CanvasRenderingContext2D, cx: number, cy: number, scale: number, color: string, alpha: number = 1, rotation: number = 0) => {
@@ -190,128 +188,123 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
     let pulseTime = 0;
 
     const loop = () => {
-      ctx.clearRect(0, 0, 1100, 680);
       const currentState = stateRef.current;
 
-      // Draw soil / root background footer line
-      ctx.save();
-      const lineGrad = ctx.createLinearGradient(100, 660, 1000, 660);
-      lineGrad.addColorStop(0, "rgba(255, 182, 193, 0)");
-      lineGrad.addColorStop(0.5, "rgba(255, 143, 171, 0.4)");
-      lineGrad.addColorStop(1, "rgba(255, 182, 193, 0)");
-      ctx.strokeStyle = lineGrad;
-      ctx.lineWidth = 4;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(150, 660);
-      ctx.lineTo(950, 660);
-      ctx.stroke();
-      ctx.restore();
-
-      // State machine logic
       if (currentState === "seed") {
-        // Pulse animation for the heart
+        ctx.clearRect(0, 0, 1100, 680);
         pulseTime += 0.05;
-        pulseScale.current = 1.8 + Math.sin(pulseTime) * 0.12;
+        pulseScale.current = 2.0 + Math.sin(pulseTime) * 0.15;
 
-        // Glow behind seed
+        // Draw pulsing seed heart
+        drawHeartShape(ctx, seedPos.current.x, seedPos.current.y, pulseScale.current, "rgb(255, 110, 145)", 0.95);
+
+        // Draw the text lines pointing from the heart (exactly like original drawText)
         ctx.save();
-        const grad = ctx.createRadialGradient(
-          seedPos.current.x, seedPos.current.y, 0,
-          seedPos.current.x, seedPos.current.y, 70
-        );
-        grad.addColorStop(0, "rgba(255, 143, 171, 0.25)");
-        grad.addColorStop(1, "rgba(255, 143, 171, 0)");
-        ctx.fillStyle = grad;
+        ctx.strokeStyle = "rgba(255, 110, 145, 0.8)";
+        ctx.fillStyle = "rgba(255, 110, 145, 0.9)";
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(seedPos.current.x, seedPos.current.y, 70, 0, 2 * Math.PI);
+        ctx.moveTo(seedPos.current.x, seedPos.current.y);
+        ctx.lineTo(seedPos.current.x + 15, seedPos.current.y + 15);
+        ctx.lineTo(seedPos.current.x + 130, seedPos.current.y + 15);
+        ctx.stroke();
+
+        ctx.font = "italic 400 13px Outfit, sans-serif";
+        ctx.fillText("Click Me :)", seedPos.current.x + 30, seedPos.current.y + 8);
+        ctx.fillText("Birthday Queen !", seedPos.current.x + 28, seedPos.current.y + 28);
+        ctx.restore();
+      } 
+      else if (currentState === "seed-shrinking") {
+        ctx.clearRect(0, 0, 1100, 680);
+        seedScale.current *= 0.95;
+
+        // Draw shrinking seed
+        drawHeartShape(ctx, seedPos.current.x, seedPos.current.y, seedScale.current, "rgb(255, 110, 145)", 0.9);
+
+        if (seedScale.current < 0.25) {
+          setState("seed-falling");
+        }
+      } 
+      else if (currentState === "seed-falling") {
+        ctx.clearRect(0, 0, 1100, 680);
+        
+        // Draw growing white footer line
+        if (footerLength.current < 900) {
+          footerLength.current += 16;
+        }
+        ctx.save();
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(540 - footerLength.current / 2, 660);
+        ctx.lineTo(540 + footerLength.current / 2, 660);
+        ctx.stroke();
+        ctx.restore();
+
+        // Move dot down
+        if (seedPos.current.y < 660) {
+          seedPos.current.y += 4;
+        }
+
+        // Draw falling circle
+        ctx.save();
+        ctx.fillStyle = "rgb(255, 110, 145)";
+        ctx.beginPath();
+        ctx.arc(seedPos.current.x, seedPos.current.y, 5, 0, 2 * Math.PI);
         ctx.fill();
         ctx.restore();
 
-        // Draw pulsing heart
-        drawHeartShape(ctx, seedPos.current.x, seedPos.current.y, pulseScale.current, "rgb(255, 110, 145)", 0.95);
-
-        // Draw seed helper texts
-        ctx.save();
-        ctx.fillStyle = "rgba(255, 143, 171, 0.85)";
-        ctx.font = "italic 300 14px Outfit, Inter, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText("Click the heart to bloom", seedPos.current.x, seedPos.current.y + 40);
-        ctx.restore();
-      } 
-      else if (currentState === "seed-falling") {
-        // Animate heart moving down and shrinking
-        let targetReached = true;
-        if (seedPos.current.y < 650) {
-          seedPos.current.y += 8;
-          targetReached = false;
-        }
-        if (seedScale.current > 0.4) {
-          seedScale.current -= 0.05;
-          targetReached = false;
-        }
-        if (seedAlpha.current > 0) {
-          seedAlpha.current -= 0.035;
-        }
-
-        drawHeartShape(ctx, seedPos.current.x, seedPos.current.y, Math.max(0.2, seedScale.current), "rgb(255, 110, 145)", Math.max(0, seedAlpha.current));
-
-        if (targetReached) {
-          // Initialize active branches with trunk
-          activeBranches.current = [new class {
-            p1 = { x: branchData[0] as number, y: branchData[1] as number };
-            p2 = { x: branchData[2] as number, y: branchData[3] as number };
-            p3 = { x: branchData[4] as number, y: branchData[5] as number };
-            startRadius = branchData[6] as number;
-            currentRadius = branchData[6] as number;
-            length = branchData[7] as number;
-            len = 0;
-            childBranches = branchData[8] as any[];
-            points: Point[] = [];
+        if (seedPos.current.y >= 660) {
+          // Initialize active branches
+          activeBranches.current = [{
+            p1: { x: branchData[0] as number, y: branchData[1] as number },
+            p2: { x: branchData[2] as number, y: branchData[3] as number },
+            p3: { x: branchData[4] as number, y: branchData[5] as number },
+            radius: branchData[6] as number,
+            length: branchData[7] as number,
+            len: 0,
+            childBranches: branchData[8] as any[],
           }];
+          
+          // Clear canvas one last time to start painting tree progressively without clear!
+          ctx.clearRect(0, 0, 1100, 680);
+          
+          // Redraw final footer line
+          ctx.save();
+          ctx.strokeStyle = "#FFFFFF";
+          ctx.lineWidth = 4;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(540 - 450, 660);
+          ctx.lineTo(540 + 450, 660);
+          ctx.stroke();
+          ctx.restore();
+
           setState("growing");
         }
-      }
-
-      // 2. Draw completed tree branches
-      ctx.save();
-      ctx.fillStyle = "oklch(0.72 0.14 10)"; // Match pink gradient theme
-      completedBranches.current.forEach((b) => {
-        b.points.forEach((p, idx) => {
-          ctx.beginPath();
-          // Fade branch radius along its path
-          const rad = b.startRadius * Math.pow(0.975, idx);
-          ctx.arc(p.x, p.y, Math.max(1, rad), 0, 2 * Math.PI);
-          ctx.fill();
-        });
-      });
-      ctx.restore();
-
-      // 3. Grow active branches
-      if (currentState === "growing") {
-        let branchGrowing = false;
+      } 
+      else if (currentState === "growing") {
+        // Grow branches progressively: do NOT clear canvas!
         const currentActive = [...activeBranches.current];
 
         currentActive.forEach((b) => {
           if (b.len <= b.length) {
-            branchGrowing = true;
             const t = b.len / b.length;
             const p = bezier(b.p1, b.p2, b.p3, t);
-            b.points.push(p);
 
-            // Draw this frame segment
+            // Draw branch circle segment
             ctx.save();
-            ctx.fillStyle = "oklch(0.72 0.14 10)";
+            ctx.fillStyle = "#FFC0CB"; // Pastel pink branch matching original
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(1, b.currentRadius), 0, 2 * Math.PI);
+            ctx.arc(p.x, p.y, Math.max(1, b.radius), 0, 2 * Math.PI);
             ctx.fill();
             ctx.restore();
 
-            b.len += 1.5; // Controls growing speed
-            b.currentRadius *= 0.978;
+            b.len += 1; // 1 step per frame
+            b.radius *= 0.97; // Original tapering
           } else {
             // Branch complete, spawn children
-            completedBranches.current.push(b);
             activeBranches.current = activeBranches.current.filter((item) => item !== b);
 
             b.childBranches.forEach((child) => {
@@ -319,91 +312,99 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
                 p1: { x: child[0], y: child[1] },
                 p2: { x: child[2], y: child[3] },
                 p3: { x: child[4], y: child[5] },
-                startRadius: child[6],
-                currentRadius: child[6],
+                radius: child[6],
                 length: child[7],
                 len: 0,
                 childBranches: child[8] || [],
-                points: [],
               });
             });
           }
         });
 
-        if (!branchGrowing && activeBranches.current.length === 0) {
+        if (activeBranches.current.length === 0) {
           setState("blooming");
         }
-      }
+      } 
+      else if (currentState === "blooming") {
+        // Bloom flowers progressively: do NOT clear canvas!
+        // Spawn 2 new blooms per frame
+        const newBlooms = bloomsCache.current.splice(0, 2);
+        newBlooms.forEach((nb) => activeBlooms.current.push(nb));
 
-      // 4. Draw & animate blooms
-      if (currentState === "blooming" || currentState === "done") {
-        let bloomingInProgress = false;
-        
-        blooms.current.forEach((b, idx) => {
-          // Stagger the blooming of flowers
-          if (currentState === "blooming" && idx < activeBloomsCount.current) {
-            if (b.scale < b.maxScale) {
-              b.scale += b.speed;
-              bloomingInProgress = true;
-            }
-          }
-
+        // Grow active blooms
+        const currentBlooms = [...activeBlooms.current];
+        currentBlooms.forEach((b) => {
           drawHeartShape(ctx, b.p.x, b.p.y, b.scale, b.color, b.alpha, b.angle);
+          b.scale += b.speed;
+          
+          if (b.scale >= b.maxScale) {
+            // Remove from active list but keeps pixels on canvas
+            activeBlooms.current = activeBlooms.current.filter((item) => item !== b);
+          }
         });
 
-        if (currentState === "blooming") {
-          // Incrementally unlock more blooms for staggered effect
-          if (activeBloomsCount.current < blooms.current.length) {
-            activeBloomsCount.current += 3;
+        if (bloomsCache.current.length === 0 && activeBlooms.current.length === 0) {
+          // Take static snapshot of fully grown tree
+          const offscreen = document.createElement("canvas");
+          offscreen.width = 1100;
+          offscreen.height = 680;
+          const offscreenCtx = offscreen.getContext("2d");
+          if (offscreenCtx) {
+            offscreenCtx.drawImage(canvas, 0, 0);
+            offscreenCanvasRef.current = offscreen;
           }
-          if (!bloomingInProgress && activeBloomsCount.current >= blooms.current.length) {
-            setState("done");
-            onBloomComplete();
-          }
+          
+          setState("done");
+          onBloomComplete();
         }
-      }
+      } 
+      else if (currentState === "done") {
+        // Clean frame draw loop using offscreen snapshot + falling leaves
+        ctx.clearRect(0, 0, 1100, 680);
+        
+        if (offscreenCanvasRef.current) {
+          ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+        }
 
-      // 5. Falling leaf/heart animation
-      if (currentState === "done") {
-        // Spawn falling leaves/hearts from the bloomed tree randomly
-        if (Math.random() < 0.12 && fallingHearts.current.length < 40) {
-          // Select a random bloom as spawn point
-          const sourceBloom = blooms.current[Math.floor(Math.random() * blooms.current.length)];
+        // Spawn falling leaves
+        if (Math.random() < 0.12 && fallingHearts.current.length < 50) {
+          // Find a random bloom position (can canopy area)
+          const spawnX = Math.random() * (1100 - 100) + 50;
+          const spawnY = Math.random() * (400 - 100) + 100;
+          
           const leafColors = [
-            "rgba(255, 143, 171, 0.8)",  // Pink heart
-            "rgba(251, 111, 146, 0.75)", // Darker rose heart
-            "rgba(255, 230, 235, 0.8)",  // Very pale leaf pink
-            "rgba(255, 215, 0, 0.6)",    // Golden leaf particle
+            "rgba(255, 143, 171, 0.85)", // Pink
+            "rgba(251, 111, 146, 0.8)",  // Darker rose
+            "rgba(255, 230, 235, 0.8)",  // White pink
+            "rgba(255, 215, 0, 0.65)",   // Golden sparkle
           ];
 
           fallingHearts.current.push({
-            x: sourceBloom.p.x,
-            y: sourceBloom.p.y,
-            size: 0.04 + Math.random() * 0.08,
-            speedY: 1.0 + Math.random() * 1.5,
+            x: spawnX,
+            y: spawnY,
+            size: 0.05 + Math.random() * 0.07,
+            speedY: 1.2 + Math.random() * 1.5,
             speedX: (Math.random() - 0.5) * 1.2,
             rotation: Math.random() * Math.PI * 2,
-            spin: (Math.random() - 0.5) * 0.04,
-            alpha: 0.6 + Math.random() * 0.4,
+            spin: (Math.random() - 0.5) * 0.03,
+            alpha: 0.7 + Math.random() * 0.3,
             color: leafColors[Math.floor(Math.random() * leafColors.length)],
           });
         }
 
-        // Draw and update falling hearts
+        // Render falling leaves
         fallingHearts.current.forEach((fh, idx) => {
           fh.y += fh.speedY;
-          fh.x += fh.speedX + Math.sin(fh.y / 20) * 0.5; // Wind wave drift
+          fh.x += fh.speedX + Math.sin(fh.y / 25) * 0.6;
           fh.rotation += fh.spin;
           
-          // Fade out near floor
           if (fh.y > 600) {
-            fh.alpha -= 0.02;
+            fh.alpha -= 0.025;
           }
 
           drawHeartShape(ctx, fh.x, fh.y, fh.size, fh.color, Math.max(0, fh.alpha), fh.rotation);
 
-          // Clean up off-screen/faded particles
-          if (fh.y > 670 || fh.alpha <= 0) {
+          if (fh.y > 675 || fh.alpha <= 0) {
             fallingHearts.current.splice(idx, 1);
           }
         });
