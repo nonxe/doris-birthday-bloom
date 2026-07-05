@@ -158,9 +158,14 @@ function Intro({ onEnter }: { onEnter: () => void }) {
         <AnimatePresence>
           {treeBloomed && (
             <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.95, filter: "blur(10px)" }}
+              initial={{ opacity: 0, y: 150, scale: 0.95, filter: "blur(12px)" }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+              transition={{
+                type: "spring",
+                stiffness: 45,
+                damping: 14,
+                mass: 1.1,
+              }}
               className="glass rounded-3xl p-8 md:p-10 max-w-xl w-full text-center shadow-[var(--shadow-ios)] border border-white/20 -mt-16 md:-mt-24 z-20 relative"
             >
               <motion.p
