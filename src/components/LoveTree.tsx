@@ -154,7 +154,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         generatedBlooms.push({
           p: { x, y },
           color: colors[Math.floor(Math.random() * colors.length)],
-          maxScale: 0.08 + Math.random() * 0.12, // slightly smaller so they form a sharp edge
+          maxScale: 0.7 + Math.random() * 0.5, // Scale matching the original 1.0 (approx 25-35px hearts)
           scale: 0.01,
           speed: 0.08 + Math.random() * 0.05, // original uses scale+=0.1 per step, here we make it smooth
           alpha: 0.65 + Math.random() * 0.35,
@@ -382,7 +382,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
           fallingHearts.current.push({
             x: spawnX,
             y: spawnY,
-            size: 0.05 + Math.random() * 0.07,
+            size: 0.4 + Math.random() * 0.4, // larger falling hearts for visual clarity
             speedY: 1.2 + Math.random() * 1.5,
             speedX: (Math.random() - 0.5) * 1.2,
             rotation: Math.random() * Math.PI * 2,
