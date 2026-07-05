@@ -2,15 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 
-import img06 from "@/assets/IMG-20260705-WA0006.jpg.asset.json";
-import img07 from "@/assets/IMG-20260705-WA0007.jpg.asset.json";
-import img08 from "@/assets/IMG-20260705-WA0008.jpg.asset.json";
-import img09 from "@/assets/IMG-20260705-WA0009.jpg.asset.json";
-import img10 from "@/assets/IMG-20260705-WA0010.jpg.asset.json";
-import img11 from "@/assets/IMG-20260705-WA0011.jpg.asset.json";
-import img12 from "@/assets/IMG-20260705-WA0012.jpg.asset.json";
-import img13 from "@/assets/IMG-20260705-WA0013.jpg.asset.json";
-import img14 from "@/assets/IMG-20260705-WA0014.jpg.asset.json";
+import img06 from "@/assets/IMG-20260705-WA0006.jpg";
+import img07 from "@/assets/IMG-20260705-WA0007.jpg";
+import img08 from "@/assets/IMG-20260705-WA0008.jpg";
+import img09 from "@/assets/IMG-20260705-WA0009.jpg";
+import img10 from "@/assets/IMG-20260705-WA0010.jpg";
+import img11 from "@/assets/IMG-20260705-WA0011.jpg";
+import img12 from "@/assets/IMG-20260705-WA0012.jpg";
+import img13 from "@/assets/IMG-20260705-WA0013.jpg";
+import img14 from "@/assets/IMG-20260705-WA0014.jpg";
+
+import uploaded1 from "@/assets/uploaded_1.jpg";
+import uploaded2 from "@/assets/uploaded_2.jpg";
+import uploaded3 from "@/assets/uploaded_3.jpg";
+import uploaded4 from "@/assets/uploaded_4.jpg";
+import uploaded5 from "@/assets/uploaded_5.jpg";
+import uploaded6 from "@/assets/uploaded_6.jpg";
+import uploaded7 from "@/assets/uploaded_7.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -22,7 +30,24 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const photos = [img13, img06, img10, img12, img07, img11, img08, img14, img09].map((p) => p.url);
+const photos = [
+  img13,
+  img06,
+  img10,
+  img12,
+  img07,
+  img11,
+  img08,
+  img14,
+  img09,
+  uploaded1,
+  uploaded2,
+  uploaded3,
+  uploaded4,
+  uploaded5,
+  uploaded6,
+  uploaded7,
+];
 
 type Stage = "intro" | "cinema" | "finale";
 
@@ -263,14 +288,21 @@ function Finale({ onReplay }: { onReplay: () => void }) {
           Happy Birthday,
           <br />
           <span className="italic bg-gradient-to-br from-[oklch(0.72_0.14_10)] to-[oklch(0.55_0.18_5)] bg-clip-text text-transparent">
-            Dorioli
+            Dorioli! 🎉✨
           </span>
         </h2>
         <div className="mt-8 mx-auto h-px w-16 bg-gradient-to-r from-transparent via-[oklch(0.72_0.14_10)] to-transparent" />
-        <p className="mt-8 text-muted-foreground leading-relaxed text-sm md:text-base">
-          Sixteen candles, sixteen wishes, and a whole lifetime more.
-          Thank you for being the softest kind of magic in this world.
-        </p>
+        <div className="mt-8 space-y-4 text-muted-foreground leading-relaxed text-sm md:text-base text-left">
+          <p>
+            I hope this year brings you endless smiles, peace, and everything you've been wishing for. You deserve all the happiness in the world.
+          </p>
+          <p>
+            I don't know what the future holds, but I'd genuinely love to be someone who gets to see you smile more often and make your special days even more special.
+          </p>
+          <p>
+            Stay amazing, take care of yourself, and have the best birthday ever. 💙
+          </p>
+        </div>
         <p className="mt-10 text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
           — Ashish Mazumder
         </p>
