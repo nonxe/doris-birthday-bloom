@@ -212,7 +212,7 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: CROSSFADE_MS / 1000, ease: [0.4, 0, 0.2, 1] }}
           />
         </div>
-        <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+        <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-white/90 drop-shadow">
           <span>2010</span>
           <span>a life in bloom</span>
           <span>2026</span>
