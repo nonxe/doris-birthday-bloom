@@ -229,7 +229,7 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
           >
-            <p className="font-serif italic text-3xl md:text-5xl text-foreground/90 text-center px-8">
+            <p className="font-serif italic text-3xl md:text-5xl text-white text-center px-8 drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
               sixteen years of you
             </p>
           </motion.div>
