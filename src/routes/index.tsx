@@ -308,3 +308,46 @@ function FloatingOrbs() {
     </>
   );
 }
+
+/* Falling sakura petals — GPU-accelerated, deterministic for SSR */
+function SakuraRain() {
+  const petals = Array.from({ length: 22 }, (_, i) => {
+    const seed = (i * 9301 + 49297) % 233280;
+    const rnd = seed / 233280;
+    return {
+      left: (i * 4.7 + rnd * 8) % 100,
+      delay: rnd * 8,
+      duration: 9 + rnd * 7,
+      size: 14 + rnd * 14,
+      drift: (rnd - 0.5) * 120,
+      rotate: rnd * 360,
+    };
+  });
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+      {petals.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute top-[-10%] select-none"
+          style={{ left: `${p.left}%`, fontSize: p.size }}
+          initial={{ y: "-10vh", x: 0, rotate: p.rotate, opacity: 0 }}
+          animate={{
+            y: "110vh",
+            x: [0, p.drift, -p.drift * 0.6, p.drift * 0.4],
+            rotate: p.rotate + 360,
+            opacity: [0, 1, 1, 0.9, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: "linear",
+            times: [0, 0.1, 0.5, 0.8, 1],
+          }}
+        >
+          🌸
+        </motion.div>
+      ))}
+    </div>
+  );
+}
