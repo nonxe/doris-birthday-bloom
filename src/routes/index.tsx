@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { LoveTree } from "@/components/LoveTree";
 
 import img06 from "@/assets/IMG-20260705-WA0006.jpg";
 import img07 from "@/assets/IMG-20260705-WA0007.jpg";
@@ -129,79 +130,105 @@ function MouseGlow() {
 /* ------------------------ INTRO ------------------------ */
 
 function Intro({ onEnter }: { onEnter: () => void }) {
+  const [treeBloomed, setTreeBloomed] = useState(false);
   const nameLetters = Array.from("Dorioli");
 
   return (
     <motion.section
       exit={{ opacity: 0, filter: "blur(24px)", scale: 1.05 }}
       transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute inset-0 flex items-center justify-center px-6"
+      className="absolute inset-0 flex items-center justify-center px-6 overflow-y-auto py-10"
     >
       <FloatingOrbs />
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          className="text-[10px] md:text-xs uppercase tracking-[0.5em] text-muted-foreground mb-8"
-        >
-          A little something
-        </motion.p>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 30, filter: "blur(14px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ delay: 0.6, duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-          className="font-serif text-4xl md:text-6xl font-light tracking-tight text-foreground"
-        >
-          This is for you,
-        </motion.h1>
-
-        <h2 className="font-serif text-7xl md:text-9xl font-medium italic mt-3 select-none flex justify-center items-center">
-          {nameLetters.map((char, index) => (
-            <motion.span
-              key={index}
-              initial={{ opacity: 0, y: 60, rotateX: -90, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
-              transition={{
-                delay: 1.0 + index * 0.08,
-                duration: 1.0,
-                ease: [0.34, 1.56, 0.64, 1], // bouncy spring-back ease
-              }}
-              className="inline-block bg-gradient-to-br from-[oklch(0.72_0.14_10)] to-[oklch(0.55_0.18_5)] bg-clip-text text-transparent transform-gpu origin-bottom"
-            >
-              {char}
-            </motion.span>
-          ))}
-        </h2>
-
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-4xl gap-8">
+        {/* Render LoveTree canvas in the center */}
         <motion.div
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ delay: 1.8, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 h-px w-28 bg-gradient-to-r from-transparent via-[oklch(0.72_0.14_10)] to-transparent"
-        />
-
-        <motion.p
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 2.1, duration: 1.2 }}
-          className="mt-8 text-[10px] md:text-xs uppercase tracking-[0.4em] text-muted-foreground"
+          animate={{
+            scale: treeBloomed ? 0.8 : 1,
+            opacity: treeBloomed ? 0.7 : 1,
+            y: treeBloomed ? -10 : 0
+          }}
+          transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full flex justify-center"
         >
-          by Ashish Mazumder
-        </motion.p>
+          <LoveTree onBloomComplete={() => setTreeBloomed(true)} />
+        </motion.div>
 
-        <motion.button
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.5, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ scale: 1.05, y: -2, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.15)" }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onEnter}
-          className="mt-14 glass px-12 py-5 rounded-full text-foreground text-xs tracking-[0.35em] uppercase font-medium shadow-[var(--shadow-glass)] hover:shadow-[var(--shadow-ios)] transition-all duration-300"
-        >
-          Enter
-        </motion.button>
+        {/* Wishes Card Overlay: Fades in once tree is bloomed */}
+        <AnimatePresence>
+          {treeBloomed && (
+            <motion.div
+              initial={{ opacity: 0, y: 30, scale: 0.95, filter: "blur(10px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+              className="glass rounded-3xl p-8 md:p-10 max-w-xl w-full text-center shadow-[var(--shadow-ios)] border border-white/20 -mt-16 md:-mt-24 z-20 relative"
+            >
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="text-[10px] uppercase tracking-[0.5em] text-muted-foreground mb-4"
+              >
+                A little something
+              </motion.p>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="font-serif text-3xl md:text-4xl font-light tracking-tight text-foreground"
+              >
+                This is for you,
+              </motion.h1>
+
+              <h2 className="font-serif text-5xl md:text-7xl font-medium italic mt-2 select-none flex justify-center items-center">
+                {nameLetters.map((char, index) => (
+                  <motion.span
+                    key={index}
+                    initial={{ opacity: 0, y: 30, rotateX: -95, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
+                    transition={{
+                      delay: 0.6 + index * 0.08,
+                      duration: 0.8,
+                      ease: [0.34, 1.56, 0.64, 1],
+                    }}
+                    className="inline-block bg-gradient-to-br from-[oklch(0.72_0.14_10)] to-[oklch(0.55_0.18_5)] bg-clip-text text-transparent origin-bottom"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </h2>
+
+              <motion.div
+                initial={{ opacity: 0, scaleX: 0 }}
+                animate={{ opacity: 1, scaleX: 1 }}
+                transition={{ delay: 1.2, duration: 1.0 }}
+                className="mt-6 mx-auto h-px w-24 bg-gradient-to-r from-transparent via-[oklch(0.72_0.14_10)] to-transparent"
+              />
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4, duration: 0.8 }}
+                className="mt-6 text-[10px] uppercase tracking-[0.35em] text-muted-foreground"
+              >
+                by Ashish Mazumder
+              </motion.p>
+
+              <motion.button
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.6, duration: 0.8 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onEnter}
+                className="mt-8 px-10 py-4 rounded-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase font-medium shadow-[var(--shadow-ios)]"
+              >
+                Enter
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.section>
   );
