@@ -144,17 +144,17 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       "rgba(255, 221, 226, 0.75)", // Cream pink
     ];
 
-    while (generatedBlooms.length < 350) {
+    while (generatedBlooms.length < 800) {
       const x = Math.random() * (1100 - 60) + 30;
       const y = Math.random() * (450 - 30) + 30; // Canopy area
       const cx = x - 540; // Centered near main trunk
       const cy = 340 - y; // Heart canopy center
       
-      if (inHeart(cx, cy, 190)) {
+      if (inHeart(cx, cy, 185)) {
         generatedBlooms.push({
           p: { x, y },
           color: colors[Math.floor(Math.random() * colors.length)],
-          maxScale: 0.12 + Math.random() * 0.18,
+          maxScale: 0.08 + Math.random() * 0.12, // slightly smaller so they form a sharp edge
           scale: 0.01,
           speed: 0.08 + Math.random() * 0.05, // original uses scale+=0.1 per step, here we make it smooth
           alpha: 0.65 + Math.random() * 0.35,
@@ -327,8 +327,8 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       } 
       else if (currentState === "blooming") {
         // Bloom flowers progressively: do NOT clear canvas!
-        // Spawn 2 new blooms per frame
-        const newBlooms = bloomsCache.current.splice(0, 2);
+        // Spawn 5 new blooms per frame for faster density fill
+        const newBlooms = bloomsCache.current.splice(0, 5);
         newBlooms.forEach((nb) => activeBlooms.current.push(nb));
 
         // Grow active blooms
