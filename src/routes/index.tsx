@@ -33,6 +33,7 @@ function Index() {
   useEffect(() => {
     photos.forEach((src) => {
       const img = new Image();
+      img.decoding = "async";
       img.src = src;
     });
   }, []);
