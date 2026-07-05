@@ -33,6 +33,7 @@ function Index() {
   useEffect(() => {
     photos.forEach((src) => {
       const img = new Image();
+      img.decoding = "async";
       img.src = src;
     });
   }, []);
@@ -177,12 +178,15 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             <img
               src={src}
               alt=""
+              loading="eager"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover"
               draggable={false}
             />
-            {/* soft white/pink veil so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/70" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.94_0.05_10/0.4),transparent_60%)]" />
+            {/* very light pink veil — keeps photos crisp while HUD stays readable */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/40 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/35 to-transparent" />
           </motion.div>
         ))}
       </div>
@@ -208,7 +212,7 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: CROSSFADE_MS / 1000, ease: [0.4, 0, 0.2, 1] }}
           />
         </div>
-        <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+        <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-white/90 drop-shadow">
           <span>2010</span>
           <span>a life in bloom</span>
           <span>2026</span>
@@ -225,7 +229,7 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
           >
-            <p className="font-serif italic text-3xl md:text-5xl text-foreground/90 text-center px-8">
+            <p className="font-serif italic text-3xl md:text-5xl text-white text-center px-8 drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
               sixteen years of you
             </p>
           </motion.div>
@@ -247,6 +251,7 @@ function Finale({ onReplay }: { onReplay: () => void }) {
       className="absolute inset-0 flex items-center justify-center px-6 overflow-y-auto"
     >
       <FloatingOrbs />
+      <SakuraRain />
       <motion.div
         initial={{ y: 30, opacity: 0, scale: 0.96 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -301,5 +306,48 @@ function FloatingOrbs() {
         transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
       />
     </>
+  );
+}
+
+/* Falling sakura petals — GPU-accelerated, deterministic for SSR */
+function SakuraRain() {
+  const petals = Array.from({ length: 22 }, (_, i) => {
+    const seed = (i * 9301 + 49297) % 233280;
+    const rnd = seed / 233280;
+    return {
+      left: (i * 4.7 + rnd * 8) % 100,
+      delay: rnd * 8,
+      duration: 9 + rnd * 7,
+      size: 14 + rnd * 14,
+      drift: (rnd - 0.5) * 120,
+      rotate: rnd * 360,
+    };
+  });
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+      {petals.map((p, i) => (
+        <motion.div
+          key={i}
+          className="absolute top-[-10%] select-none"
+          style={{ left: `${p.left}%`, fontSize: p.size }}
+          initial={{ y: "-10vh", x: 0, rotate: p.rotate, opacity: 0 }}
+          animate={{
+            y: "110vh",
+            x: [0, p.drift, -p.drift * 0.6, p.drift * 0.4],
+            rotate: p.rotate + 360,
+            opacity: [0, 1, 1, 0.9, 0],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: "linear",
+            times: [0, 0.1, 0.5, 0.8, 1],
+          }}
+        >
+          🌸
+        </motion.div>
+      ))}
+    </div>
   );
 }
