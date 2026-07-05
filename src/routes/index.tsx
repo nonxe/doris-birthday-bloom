@@ -178,12 +178,15 @@ function Cinema({ onComplete }: { onComplete: () => void }) {
             <img
               src={src}
               alt=""
+              loading="eager"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover"
               draggable={false}
             />
-            {/* soft white/pink veil so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/20 to-white/70" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.94_0.05_10/0.4),transparent_60%)]" />
+            {/* very light pink veil — keeps photos crisp while HUD stays readable */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/20" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/40 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/35 to-transparent" />
           </motion.div>
         ))}
       </div>
