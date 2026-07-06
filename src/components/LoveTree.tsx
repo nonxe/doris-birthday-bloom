@@ -317,19 +317,25 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
         currentActive.forEach((b) => {
           if (b.len <= b.length) {
-            const t = b.len / b.length;
-            const p = bezier(b.p1, b.p2, b.p3, t);
+            const tPrev = Math.max(0, b.len) / b.length;
+            b.len += 1.2;
+            const tCurr = Math.min(b.length, b.len) / b.length;
+            const pPrev = bezier(b.p1, b.p2, b.p3, tPrev);
+            const pCurr = bezier(b.p1, b.p2, b.p3, tCurr);
 
-            // Draw branch circle segment
+            // Draw branch line segment instead of circle dots for seamless drawing
             ctx.save();
-            ctx.fillStyle = "#FFC0CB"; // Pastel pink branch matching original
+            ctx.strokeStyle = "#FFC0CB";
+            ctx.lineWidth = Math.max(1.5, b.radius * 2);
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(1, b.radius), 0, 2 * Math.PI);
-            ctx.fill();
+            ctx.moveTo(pPrev.x, pPrev.y);
+            ctx.lineTo(pCurr.x, pCurr.y);
+            ctx.stroke();
             ctx.restore();
 
-            b.len += 1; // 1 step per frame
-            b.radius *= 0.97; // Original tapering
+            b.radius *= 0.965; // Original tapering factor adjusted
           } else {
             // Branch complete, spawn children
             activeBranches.current = activeBranches.current.filter((item) => item !== b);
@@ -362,7 +368,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         const currentBlooms = [...activeBlooms.current];
         currentBlooms.forEach((b) => {
           drawHeartShape(ctx, b.p.x, b.p.y, b.scale, b.color, b.alpha, b.angle);
-          b.scale += b.speed;
+          b.scale += (b.maxScale - b.scale) * 0.14 + 0.002; // Asymptotic ease-out for organic growth transition
           
           if (b.scale >= b.maxScale) {
             // Remove from active list but keeps pixels on canvas

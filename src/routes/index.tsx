@@ -151,7 +151,11 @@ function Intro({ onEnter }: { onEnter: () => void }) {
           transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
           className="w-full flex justify-center"
         >
-          <LoveTree onBloomComplete={() => setTreeBloomed(true)} />
+          <LoveTree onBloomComplete={() => {
+            setTimeout(() => {
+              setTreeBloomed(true);
+            }, 2000);
+          }} />
         </motion.div>
 
         {/* Wishes Card Overlay: Fades in once tree is bloomed */}
