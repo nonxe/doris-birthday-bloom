@@ -160,6 +160,12 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Retina / High DPI screen scaling for crisp vector canvas drawing
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 1100 * dpr;
+    canvas.height = 680 * dpr;
+    ctx.scale(dpr, dpr);
+
     // Generate blooms matching original distribution
     const generatedBlooms: Bloom[] = [];
     const colors = [
@@ -213,8 +219,13 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
     let animationId: number;
     let pulseTime = 0;
+    let lastTime = performance.now();
 
     const loop = () => {
+      const now = performance.now();
+      const dt = Math.min(2.0, (now - lastTime) / 16.67); // cap at 2.0 to avoid huge jumps
+      lastTime = now;
+
       const currentState = stateRef.current;
 
       if (currentState === "seed") {
@@ -243,7 +254,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       } 
       else if (currentState === "seed-shrinking") {
         ctx.clearRect(0, 0, 1100, 680);
-        seedScale.current *= 0.95;
+        seedScale.current *= Math.pow(0.95, dt);
 
         // Draw shrinking seed
         drawHeartShape(ctx, seedPos.current.x, seedPos.current.y, seedScale.current, "rgb(255, 110, 145)", 0.9);
@@ -257,7 +268,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         
         // Draw growing white footer line
         if (footerLength.current < 900) {
-          footerLength.current += 16;
+          footerLength.current += 16 * dt;
         }
         ctx.save();
         ctx.strokeStyle = "#FFFFFF";
@@ -271,7 +282,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
         // Move dot down
         if (seedPos.current.y < 660) {
-          seedPos.current.y += 4;
+          seedPos.current.y += 4 * dt;
         }
 
         // Draw falling circle
@@ -318,7 +329,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         currentActive.forEach((b) => {
           if (b.len <= b.length) {
             const tPrev = Math.max(0, b.len) / b.length;
-            b.len += 1.2;
+            b.len += 1.2 * dt;
             const tCurr = Math.min(b.length, b.len) / b.length;
             const pPrev = bezier(b.p1, b.p2, b.p3, tPrev);
             const pCurr = bezier(b.p1, b.p2, b.p3, tCurr);
@@ -335,7 +346,7 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
             ctx.stroke();
             ctx.restore();
 
-            b.radius *= 0.965; // Original tapering factor adjusted
+            b.radius *= Math.pow(0.965, dt); // Original tapering factor adjusted for delta time
           } else {
             // Branch complete, spawn children
             activeBranches.current = activeBranches.current.filter((item) => item !== b);
@@ -379,8 +390,8 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         if (bloomsCache.current.length === 0 && activeBlooms.current.length === 0) {
           // Take static snapshot of fully grown tree
           const offscreen = document.createElement("canvas");
-          offscreen.width = 1100;
-          offscreen.height = 680;
+          offscreen.width = 1100 * dpr;
+          offscreen.height = 680 * dpr;
           const offscreenCtx = offscreen.getContext("2d");
           if (offscreenCtx) {
             offscreenCtx.drawImage(canvas, 0, 0);
@@ -399,7 +410,10 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
       else if (currentState === "bloomed-wait") {
         ctx.clearRect(0, 0, 1100, 680);
         if (offscreenCanvasRef.current) {
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+          ctx.restore();
         }
       } 
       else if (currentState === "done") {
@@ -407,7 +421,10 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
         ctx.clearRect(0, 0, 1100, 680);
         
         if (offscreenCanvasRef.current) {
+          ctx.save();
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+          ctx.restore();
         }
 
         // Spawn falling leaves
@@ -438,12 +455,12 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
         // Render falling leaves
         fallingHearts.current.forEach((fh, idx) => {
-          fh.y += fh.speedY;
-          fh.x += fh.speedX + Math.sin(fh.y / 25) * 0.6;
-          fh.rotation += fh.spin;
+          fh.y += fh.speedY * dt;
+          fh.x += (fh.speedX + Math.sin(fh.y / 25) * 0.6) * dt;
+          fh.rotation += fh.spin * dt;
           
           if (fh.y > 600) {
-            fh.alpha -= 0.025;
+            fh.alpha -= 0.025 * dt;
           }
 
           drawHeartShape(ctx, fh.x, fh.y, fh.size, fh.color, Math.max(0, fh.alpha), fh.rotation);
