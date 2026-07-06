@@ -154,7 +154,7 @@ function Intro({ onEnter }: { onEnter: () => void }) {
           <LoveTree onBloomComplete={() => {
             setTimeout(() => {
               setTreeBloomed(true);
-            }, 2000);
+            }, 1000);
           }} />
         </motion.div>
 
