@@ -400,11 +400,11 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
           
           setState("bloomed-wait");
           
-          // Wait 4 seconds before starting falling leaves and parent wishes popup
+          // Wait 1 second before starting falling leaves and parent wishes popup
           setTimeout(() => {
             setState("done");
             onBloomComplete();
-          }, 4000);
+          }, 1000);
         }
       } 
       else if (currentState === "bloomed-wait") {
