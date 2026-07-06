@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Point {
   x: number;
@@ -85,8 +86,9 @@ interface FallingHeart {
 
 export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [state, setState] = useState<"seed" | "seed-shrinking" | "seed-falling" | "growing" | "blooming" | "done">("seed");
+  const [state, setState] = useState<"seed" | "seed-shrinking" | "seed-falling" | "growing" | "blooming" | "bloomed-wait" | "done">("seed");
   const stateRef = useRef(state);
+  const [timeString, setTimeString] = useState("");
   
   // Seed position and properties
   const seedPos = useRef({ x: 550, y: 300 });
@@ -104,6 +106,31 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
   useEffect(() => {
     stateRef.current = state;
+  }, [state]);
+
+  // Live countdown timer since 14 July 2010
+  useEffect(() => {
+    if (state !== "bloomed-wait" && state !== "done") return;
+
+    const updateTime = () => {
+      const startDate = new Date("2010-07-14T00:00:00");
+      const now = new Date();
+      const diffMs = now.getTime() - startDate.getTime();
+
+      const seconds = Math.floor(diffMs / 1000);
+      const days = Math.floor(seconds / (3600 * 24));
+      const remainingSecsAfterDays = seconds % (3600 * 24);
+      const hours = Math.floor(remainingSecsAfterDays / 3600);
+      const remainingSecsAfterHours = remainingSecsAfterDays % 3600;
+      const minutes = Math.floor(remainingSecsAfterHours / 60);
+      const secs = remainingSecsAfterHours % 60;
+
+      setTimeString(`${days} days, ${hours} hours, ${minutes} minutes, ${secs} seconds`);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
   }, [state]);
 
   // Handle seed click to start growing the tree
@@ -354,8 +381,19 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
             offscreenCanvasRef.current = offscreen;
           }
           
-          setState("done");
-          onBloomComplete();
+          setState("bloomed-wait");
+          
+          // Wait 4 seconds before starting falling leaves and parent wishes popup
+          setTimeout(() => {
+            setState("done");
+            onBloomComplete();
+          }, 4000);
+        }
+      } 
+      else if (currentState === "bloomed-wait") {
+        ctx.clearRect(0, 0, 1100, 680);
+        if (offscreenCanvasRef.current) {
+          ctx.drawImage(offscreenCanvasRef.current, 0, 0);
         }
       } 
       else if (currentState === "done") {
@@ -422,6 +460,28 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
   return (
     <div className="relative flex flex-col items-center justify-center w-full h-[520px] max-w-2xl mx-auto overflow-hidden rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-sm shadow-[var(--shadow-glass)]">
+      {/* Time Elapsed Counter Overlay */}
+      <AnimatePresence>
+        {(state === "bloomed-wait" || state === "done") && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-6 inset-x-6 z-20 flex flex-col items-center justify-center pointer-events-none text-center"
+          >
+            <div className="glass rounded-2xl px-6 py-4 shadow-[var(--shadow-glass)] border border-white/10 max-w-md w-full backdrop-blur-md">
+              <span className="text-[9px] uppercase tracking-[0.4em] text-muted-foreground block mb-1">
+                Since 14 July 2010
+              </span>
+              <span className="font-serif text-sm md:text-base font-medium text-foreground tracking-wide tabular-nums">
+                {timeString}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <canvas
         ref={canvasRef}
         width="1100"
