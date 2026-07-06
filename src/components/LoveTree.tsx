@@ -460,15 +460,15 @@ export function LoveTree({ onBloomComplete }: { onBloomComplete: () => void }) {
 
   return (
     <div className="relative flex flex-col items-center justify-center w-full h-[520px] max-w-2xl mx-auto overflow-hidden rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-sm shadow-[var(--shadow-glass)]">
-      {/* Time Elapsed Counter Overlay */}
+      {/* Time Elapsed Counter Overlay at the bottom */}
       <AnimatePresence>
         {(state === "bloomed-wait" || state === "done") && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: -20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-6 inset-x-6 z-20 flex flex-col items-center justify-center pointer-events-none text-center"
+            className="absolute bottom-6 inset-x-6 z-20 flex flex-col items-center justify-center pointer-events-none text-center"
           >
             <div className="glass rounded-2xl px-6 py-4 shadow-[var(--shadow-glass)] border border-white/10 max-w-md w-full backdrop-blur-md">
               <span className="text-[9px] uppercase tracking-[0.4em] text-muted-foreground block mb-1">
