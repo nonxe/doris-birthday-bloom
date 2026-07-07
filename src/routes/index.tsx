@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import { LoveTree } from "@/components/LoveTree";
+import musicSrc from "@/assets/ms.mp3";
 
 import img06 from "@/assets/IMG-20260705-WA0006.jpg";
 import img07 from "@/assets/IMG-20260705-WA0007.jpg";
@@ -73,6 +74,7 @@ type Stage = "intro" | "cinema" | "finale";
 
 function Index() {
   const [stage, setStage] = useState<Stage>("intro");
+  const [music, setMusic] = useState<HTMLAudioElement | null>(null);
 
   // Preload all photos as soon as intro mounts so nothing loads mid-animation
   useEffect(() => {
@@ -81,15 +83,39 @@ function Index() {
       img.decoding = "async";
       img.src = src;
     });
+
+    // Initialize audio client-side
+    const audio = new Audio(musicSrc);
+    audio.loop = true;
+    setMusic(audio);
+
+    return () => {
+      audio.pause();
+    };
   }, []);
+
+  const handleEnter = () => {
+    setStage("cinema");
+    if (music) {
+      music.play().catch((err) => console.log("Audio playback error:", err));
+    }
+  };
+
+  const handleReplay = () => {
+    setStage("cinema");
+    if (music) {
+      music.currentTime = 0;
+      music.play().catch((err) => console.log("Audio playback error:", err));
+    }
+  };
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-background select-none">
       <MouseGlow />
       <AnimatePresence mode="wait">
-        {stage === "intro" && <Intro key="intro" onEnter={() => setStage("cinema")} />}
+        {stage === "intro" && <Intro key="intro" onEnter={handleEnter} />}
         {stage === "cinema" && <Cinema key="cinema" onComplete={() => setStage("finale")} />}
-        {stage === "finale" && <Finale key="finale" onReplay={() => setStage("cinema")} />}
+        {stage === "finale" && <Finale key="finale" onReplay={handleReplay} />}
       </AnimatePresence>
     </div>
   );
